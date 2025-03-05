@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Aluguéis</h1>
+
+<button onclick="openAddRentalModal()">Alugar Novo Livro</button>
+
+<h2>Aluguéis em Andamento</h2>
+<table>
+    <tr>
+        <th>Título do Livro</th>
+        <th>Membro</th>
+        <th>Data de Aluguel</th>
+        <th>Data de Vencimento</th>
+        <th>Ações</th>
+    </tr>
+    {% for rental in rentals_data %}
+    <tr>
+        <td>{{ rental.book_title }}</td>
+        <td>{{ rental.member_name }}</td>
+        <td>{{ rental.rent_date }}</td>
+        <td>{{ rental.return_date|br_datetime }}</td>
+        <td>
+            <button onclick="openEditRentalModal('{{ rental.id }}', '{{ rental.return_date }}')">Editar</button>
+            <form method="POST" action="{{ url_for('rentals') }}" style="display:inline;">
+                <input type="hidden" name="action" value="return_rental">
+                <input type="hidden" name="rental_id" value="{{ rental.id }}">
+                <button type="submit">Devolver</button>
+            </form>
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+
+<div id="addRentalModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeAddRentalModal()">×</span>
+        <h2>Alugar Novo Livro</h2>
+        <form method="POST" action="{{ url_for('rentals') }}">
+            <input type="hidden" name="action" value="add_rental">
+            <div>
+                <label>Selecionar Livro:</label>
+                <select name="book_id" required>
+                    <option value="">-- Selecione um Livro --</option>
+                    {% for book in books %}
+                        <option value="{{ book.id }}">{{ book.title }} por {{ book.author }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label>Selecionar Membro:</label>
+                <select name="member_id" required>
+                    <option value="">-- Selecione um Membro --</option>
+                    {% for member in members %}
+                        <option value="{{ member.id }}">{{ member.name }} ({{ member.email }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit">Alugar</button>
+        </form>
+    </div>
+</div>
+
+<!-- Edit Rental Modal -->
+<div id="editRentalModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeEditRentalModal()">×</span>
+        <h2>Editar Aluguel</h2>
+        <form method="POST" action="{{ url_for('rentals') }}">
+            <input type="hidden" name="action" value="edit_rental">
+            <input type="hidden" name="rental_id" id="editRentalId">
+            <div>
+                <label>Nova Data de Devolução:</label>
+                <input type="date" name="return_date" id="editRentalReturnDate" required min="{{ today }}">
+            </div>
+            <button type="submit">Salvar</button>
+        </form>
+    </div>
+</div>
+
+<script>
+function openAddRentalModal() {
+    document.getElementById('addRentalModal').style.display = 'block';
+}
+
+function closeAddRentalModal() {
+    document.getElementById('addRentalModal').style.display = 'none';
+}
+
+function openEditRentalModal(id, returnDate) {
+    document.getElementById('editRentalId').value = id;
+    document.getElementById('editRentalReturnDate').value = returnDate;
+    document.getElementById('editRentalModal').style.display = 'block';
+}
+
+function closeEditRentalModal() {
+    document.getElementById('editRentalModal').style.display = 'none';
+}
+
+window.onclick = function(event) {
+    const addModal = document.getElementById('addRentalModal');
+    const editModal = document.getElementById('editRentalModal');
+    if (event.target == addModal) {
+        addModal.style.display = 'none';
+    }
+    if (event.target == editModal) {
+        editModal.style.display = 'none';
+    }
+}
+</script>
+
+{% for message in get_flashed_messages() %}
+    <div class="flash-message">{{ message }}</div>
+{% endfor %}
+{% endblock %}

@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Bem-vindo ao Sistema de Aluguel de Livros</h1>
+<p>Use a barra de navegação acima para gerenciar livros e membros.</p>
+{% for message in get_flashed_messages() %}
+    <p style="color: green;">{{ message }}</p>
+{% endfor %}
+{% endblock %}

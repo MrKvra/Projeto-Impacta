@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Contact List</title>
+    <style>
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        li {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+        li:last-child {
+            border-bottom: none;
+        }
+        .back-link {
+            display: block;
+            margin-top: 20px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Contact List</h1>
+        {% if contacts %}
+            <ul>
+                {% for contact in contacts %}
+                    <li>
+                        <strong>ID:</strong> {{ contact.user_id }}<br>
+                        <strong>Name:</strong> {{ contact.name }}<br>
+                        <strong>Email:</strong> {{ contact.email }}<br>
+                        <strong>Phone:</strong> {{ contact.phone }}
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>No contacts found.</p>
+        {% endif %}
+        <a href="/" class="back-link">Back to Form</a>
+    </div>
+</body>
+</html>

@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Histórico de Aluguel</h1>
+<table>
+    <tr>
+        <th>Título do Livro</th>
+        <th>Membro</th>
+        <th>Data de Aluguel</th>
+        <th>Data de Vencimento</th>
+        <th>Data de Devolução</th>
+        <th>Multa</th>
+    </tr>
+    {% for rental in rentals %}
+    <tr>
+        <td>{{ rental.book.title }}</td>
+        <td>{{ rental.member.name }}</td>
+        <td>{{ rental.rent_date|br_datetime }}</td>
+        <td>{{ rental.return_date|br_datetime }}</td>
+        <td>{{ rental.actual_return_date|br_datetime }}</td>
+        <td>R$ {{ rental.fine_amount|round(2)|replace('.', ',') }}</td>
+    </tr>
+    {% endfor %}
+</table>
+
+{% for message in get_flashed_messages() %}
+    <div class="flash-message">{{ message }}</div>
+{% endfor %}
+{% endblock %}

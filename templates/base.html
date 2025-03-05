@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Sistema de Aluguel de Livros Projeto Impacta</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <nav>
+        <div class="container">
+            <a href="{{ url_for('index') }}">Início</a>
+            <a href="{{ url_for('rentals') }}">Aluguéis</a>
+            <a href="{{ url_for('view_books') }}">Ver Livros</a>
+            <a href="{{ url_for('view_members') }}">Ver Membros</a>
+            <a href="{{ url_for('rental_history') }}">Histórico de Aluguel</a>
+        </div>
+    </nav>
+    <div class="container">
+        {% block content %}{% endblock %}
+    </div>
+</body>
+</html>
