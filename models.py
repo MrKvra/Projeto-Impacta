@@ -5,11 +5,12 @@ db = SQLAlchemy()
 
 class Book(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(255), nullable=False)
-    author = db.Column(db.String(255), nullable=False)
-    isbn = db.Column(db.String(13), unique=True)
+    title = db.Column(db.String(100), nullable=False)
+    author = db.Column(db.String(100), nullable=False)
+    isbn = db.Column(db.String(13), unique=True, nullable=False)
     status = db.Column(db.String(20), default='available')
-    rentals = db.relationship('Rental', backref='book', lazy=True, cascade="all, delete-orphan")
+    genero = db.Column(db.String(50), nullable=False, default='Não especificado')  # Nova inclusão, para um futuro sistema de pesquisa.
+    rentals = db.relationship('Rental', backref='book', lazy=True)
 
 class Member(db.Model):
     id = db.Column(db.Integer, primary_key=True)

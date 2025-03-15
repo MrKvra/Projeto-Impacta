@@ -1,130 +1,182 @@
 {% extends "base.html" %}
 {% block content %}
-<h1>Todos os Livros</h1>
+<div class="container">
+    <h1>Todos os Livros</h1>
 
-<button onclick="openAddBookModal()">Adicionar Novo Livro</button>
+    <button onclick="openAddBookModal()">Adicionar Novo Livro</button>
 
-<table>
-    <tr>
-        <th>ID</th>
-        <th>Título</th>
-        <th>Autor</th>
-        <th>Status</th>
-        <th>Alugado Por</th>
-        <th>Data de Devolução</th>
-        <th>Multa</th>
-        <th>Ações</th>
-    </tr>
-    {% for book in books %}
-    <tr>
-        <td>{{ book.id }}</td>
-        <td>{{ book.title }}</td>
-        <td>{{ book.author }}</td>
-        <td>{{ 'Disponível' if book.status == 'available' else 'Alugado' }}</td>
-        <td>{{ book.rentals[-1].member.name if book.rentals and not book.rentals[-1].actual_return_date else '-' }}</td>
-        <td>{{ book.rentals[-1].return_date|br_datetime if book.rentals and not book.rentals[-1].actual_return_date else '-' }}</td>
-        <td>
-            {% if book.rentals and not book.rentals[-1].actual_return_date and current_date > book.rentals[-1].return_date %}
-                R$ {{ ((current_date - book.rentals[-1].return_date).days * 1.00)|round(2)|replace('.', ',') }}
-            {% else %}
-                R$ {{ (book.rentals[-1].fine_amount if book.rentals else 0.00)|round(2)|replace('.', ',') }}
-            {% endif %}
-        </td>
-        <td>
-            <button onclick="openEditBookModal('{{ book.id }}', '{{ book.title }}', '{{ book.author }}', '{{ book.isbn }}')">Editar</button>
-            <form method="POST" action="{{ url_for('view_books') }}" style="display:inline;" onsubmit="return confirm('Tem certeza que deseja excluir este livro? Isso também excluirá todo o histórico de aluguel associado ao livro.');">
-                <input type="hidden" name="action" value="delete_book">
-                <input type="hidden" name="book_id" value="{{ book.id }}">
-                <button type="submit" {% if book.status == 'rented' %}disabled{% endif %}>Excluir</button>
+    <div>
+        <label for="per_page">Itens por página:</label>
+        <select id="per_page" onchange="window.location.href='/view_books?page=1&per_page=' + this.value">
+            <option value="5" {% if per_page == 5 %}selected{% endif %}>5</option>
+            <option value="10" {% if per_page == 10 %}selected{% endif %}>10</option>
+            <option value="20" {% if per_page == 20 %}selected{% endif %}>20</option>
+        </select>
+    </div>
+
+    <table>
+        <tr>
+            <th>ID</th>
+            <th>Título</th>
+            <th>Autor</th>
+            <th>Gênero</th>
+            <th>Status</th>
+            <th>Alugado Por</th>
+            <th>Data de Devolução</th>
+            <th>Multa</th>
+            <th>Ações</th>
+        </tr>
+        {% for book in books %}
+        <tr>
+            <td>{{ book.id }}</td>
+            <td>{{ book.title }}</td>
+            <td>{{ book.author }}</td>
+            <td>{{ book.genero }}</td>
+            <td>{{ 'Disponível' if book.status == 'available' else 'Alugado' }}</td>
+            <td>{{ book.rentals[-1].member.name if book.rentals and not book.rentals[-1].actual_return_date else '-' }}</td>
+            <td>{{ book.rentals[-1].return_date|br_datetime if book.rentals and not book.rentals[-1].actual_return_date else '-' }}</td>
+            <td>
+                {% if book.rentals and not book.rentals[-1].actual_return_date and current_date > book.rentals[-1].return_date %}
+                    R$ {{ ((current_date - book.rentals[-1].return_date).days * 1.00)|round(2)|replace('.', ',') }}
+                {% else %}
+                    R$ {{ (book.rentals[-1].fine_amount if book.rentals else 0.00)|round(2)|replace('.', ',') }}
+                {% endif %}
+            </td>
+            <td class="actions">
+                <button onclick="openEditBookModal('{{ book.id }}', '{{ book.title }}', '{{ book.author }}', '{{ book.isbn }}', '{{ book.genero }}')">Editar</button>
+                <form method="POST" action="{{ url_for('view_books', page=pagination.page, per_page=per_page) }}" style="display:inline;" onsubmit="return confirm('Tem certeza que deseja excluir este livro? Isso também excluirá todo o histórico de aluguel associado ao livro.');">
+                    <input type="hidden" name="action" value="delete_book">
+                    <input type="hidden" name="book_id" value="{{ book.id }}">
+                    <button type="submit" {% if book.status == 'rented' %}disabled{% endif %}>Excluir</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <div>
+        {% if pagination.has_prev %}
+            <a href="{{ url_for('view_books', page=pagination.prev_num, per_page=per_page) }}">Anterior</a>
+        {% endif %}
+        <span>Página {{ pagination.page }} de {{ pagination.pages }}</span>
+        {% if pagination.has_next %}
+            <a href="{{ url_for('view_books', page=pagination.next_num, per_page=per_page) }}">Próxima</a>
+        {% endif %}
+    </div>
+
+    <!-- Add Book Modal -->
+    <div id="addBookModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeAddBookModal()">×</span>
+            <h2>Adicionar Novo Livro</h2>
+            <form method="POST" action="{{ url_for('view_books', page=pagination.page, per_page=per_page) }}">
+                <input type="hidden" name="action" value="add_book">
+                <div>
+                    <label>Título:</label>
+                    <input type="text" name="title" required>
+                </div>
+                <div>
+                    <label>Autor:</label>
+                    <input type="text" name="author" required>
+                </div>
+                <div>
+                    <label>ISBN:</label>
+                    <input type="text" name="isbn" required>
+                </div>
+                <div>
+                    <label>Gênero:</label>
+                    <select name="genero" required>
+                        <option value="Fantasia">Fantasia</option>
+                        <option value="Ficção Científica">Ficção Científica</option>
+                        <option value="Romance">Romance</option>
+                        <option value="Aventura">Aventura</option>
+                        <option value="Clássico">Clássico</option>
+                        <option value="Mistério">Mistério</option>
+                        <option value="Realismo Mágico">Realismo Mágico</option>
+                        <option value="Literatura Infantil">Literatura Infantil</option>
+                        <option value="Não Ficção">Não Ficção</option>
+                    </select>
+                </div>
+                <button type="submit">Adicionar</button>
             </form>
-        </td>
-    </tr>
+        </div>
+    </div>
+
+    <!-- Edit Book Modal -->
+    <div id="editBookModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeEditBookModal()">×</span>
+            <h2>Editar Livro</h2>
+            <form method="POST" action="{{ url_for('view_books', page=pagination.page, per_page=per_page) }}">
+                <input type="hidden" name="action" value="edit_book">
+                <input type="hidden" name="book_id" id="editBookId">
+                <div>
+                    <label>Título:</label>
+                    <input type="text" name="title" id="editBookTitle" required>
+                </div>
+                <div>
+                    <label>Autor:</label>
+                    <input type="text" name="author" id="editBookAuthor" required>
+                </div>
+                <div>
+                    <label>ISBN:</label>
+                    <input type="text" name="isbn" id="editBookIsbn" required>
+                </div>
+                <div>
+                    <label>Gênero:</label>
+                    <select name="genero" id="editBookGenero" required>
+                        <option value="Fantasia">Fantasia</option>
+                        <option value="Ficção Científica">Ficção Científica</option>
+                        <option value="Romance">Romance</option>
+                        <option value="Aventura">Aventura</option>
+                        <option value="Clássico">Clássico</option>
+                        <option value="Mistério">Mistério</option>
+                        <option value="Terror">Mistério</option>
+                        <option value="Literatura Infantil">Literatura Infantil</option>
+
+                    </select>
+                </div>
+                <button type="submit">Salvar</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+    function openAddBookModal() {
+        document.getElementById('addBookModal').style.display = 'block';
+    }
+
+    function closeAddBookModal() {
+        document.getElementById('addBookModal').style.display = 'none';
+    }
+
+    function openEditBookModal(id, title, author, isbn, genero) {
+        document.getElementById('editBookId').value = id;
+        document.getElementById('editBookTitle').value = title;
+        document.getElementById('editBookAuthor').value = author;
+        document.getElementById('editBookIsbn').value = isbn;
+        document.getElementById('editBookGenero').value = genero;
+        document.getElementById('editBookModal').style.display = 'block';
+    }
+
+    function closeEditBookModal() {
+        document.getElementById('editBookModal').style.display = 'none';
+    }
+
+    window.onclick = function(event) {
+        const addModal = document.getElementById('addBookModal');
+        const editModal = document.getElementById('editBookModal');
+        if (event.target == addModal) {
+            addModal.style.display = 'none';
+        }
+        if (event.target == editModal) {
+            editModal.style.display = 'none';
+        }
+    }
+    </script>
+
+    {% for message in get_flashed_messages() %}
+        <div class="flash-message">{{ message }}</div>
     {% endfor %}
-</table>
-
-<!-- Add Book Modal -->
-<div id="addBookModal" class="modal">
-    <div class="modal-content">
-        <span class="close" onclick="closeAddBookModal()">×</span>
-        <h2>Adicionar Novo Livro</h2>
-        <form method="POST" action="{{ url_for('view_books') }}">
-            <input type="hidden" name="action" value="add_book">
-            <div>
-                <label>Título:</label>
-                <input type="text" name="title" required>
-            </div>
-            <div>
-                <label>Autor:</label>
-                <input type="text" name="author" required>
-            </div>
-            <div>
-                <label>ISBN:</label>
-                <input type="text" name="isbn" required>
-            </div>
-            <button type="submit">Adicionar</button>
-        </form>
-    </div>
 </div>
-
-<!-- Edit Book Modal -->
-<div id="editBookModal" class="modal">
-    <div class="modal-content">
-        <span class="close" onclick="closeEditBookModal()">×</span>
-        <h2>Editar Livro</h2>
-        <form method="POST" action="{{ url_for('view_books') }}">
-            <input type="hidden" name="action" value="edit_book">
-            <input type="hidden" name="book_id" id="editBookId">
-            <div>
-                <label>Título:</label>
-                <input type="text" name="title" id="editBookTitle" required>
-            </div>
-            <div>
-                <label>Autor:</label>
-                <input type="text" name="author" id="editBookAuthor" required>
-            </div>
-            <div>
-                <label>ISBN:</label>
-                <input type="text" name="isbn" id="editBookIsbn" required>
-            </div>
-            <button type="submit">Salvar</button>
-        </form>
-    </div>
-</div>
-
-<script>
-function openAddBookModal() {
-    document.getElementById('addBookModal').style.display = 'block';
-}
-
-function closeAddBookModal() {
-    document.getElementById('addBookModal').style.display = 'none';
-}
-
-function openEditBookModal(id, title, author, isbn) {
-    document.getElementById('editBookId').value = id;
-    document.getElementById('editBookTitle').value = title;
-    document.getElementById('editBookAuthor').value = author;
-    document.getElementById('editBookIsbn').value = isbn;
-    document.getElementById('editBookModal').style.display = 'block';
-}
-
-function closeEditBookModal() {
-    document.getElementById('editBookModal').style.display = 'none';
-}
-
-window.onclick = function(event) {
-    const addModal = document.getElementById('addBookModal');
-    const editModal = document.getElementById('editBookModal');
-    if (event.target == addModal) {
-        addModal.style.display = 'none';
-    }
-    if (event.target == editModal) {
-        editModal.style.display = 'none';
-    }
-}
-</script>
-
-{% for message in get_flashed_messages() %}
-    <div class="flash-message">{{ message }}</div>
-{% endfor %}
 {% endblock %}

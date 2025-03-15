@@ -1,20 +1,19 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-BR">
 <head>
-    <title>Sistema de Aluguel de Livros Projeto Impacta</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <meta charset="UTF-8">
+    <title>Sistema de Aluguel de Livros</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
     <nav>
-        <div class="container">
-            <a href="{{ url_for('index') }}">Início</a>
-            <a href="{{ url_for('rentals') }}">Aluguéis</a>
-            <a href="{{ url_for('view_books') }}">Ver Livros</a>
-            <a href="{{ url_for('view_members') }}">Ver Membros</a>
-            <a href="{{ url_for('rental_history') }}">Histórico de Aluguel</a>
-        </div>
+        <a href="{{ url_for('index') }}">Início</a> |
+        <a href="{{ url_for('view_books') }}">Livros</a> |
+        <a href="{{ url_for('view_members') }}">Membros</a> |
+        <a href="{{ url_for('rentals') }}">Aluguéis</a> |
+        <a href="{{ url_for('rental_history') }}">Histórico de Aluguéis</a>
     </nav>
-    <div class="container">
+    <div>
         {% block content %}{% endblock %}
     </div>
 </body>
