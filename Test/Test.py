@@ -1,6 +1,8 @@
 from flask import Flask, request, jsonify, render_template
 from flask_sqlalchemy import SQLAlchemy
 
+# código que fiz para testar a configuração do flask alchemy com SQL server.
+
 app = Flask (__name__, template_folder='templates')
 
 connection_string = "mssql+pyodbc://DESKTOP-TFIS1IE\\SQLEXPRESS/ProjetoImpacta?driver=ODBC+Driver+17+for+SQL+Server&trusted_connection=yes"
