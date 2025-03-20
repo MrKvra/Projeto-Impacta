@@ -235,4 +235,4 @@ def rental_history():
     return render_template('rental_history.html', rentals=rentals_paginated.items, pagination=rentals_paginated, per_page=per_page)
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True)
