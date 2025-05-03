@@ -46,6 +46,7 @@ table {
     border-collapse: collapse;
     background-color: white;
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    margin-top: 10px; /* 10px gap before table */
 }
 th, td {
     padding: 12px;
@@ -65,7 +66,6 @@ tr:hover {
 td form, td button {
     margin: 0 5px;
 }
-/* Added for column organization */
 .actions {
     display: flex;
     gap: 10px;
@@ -93,6 +93,12 @@ button[type="submit"][formaction*="/delete"] {
 }
 button[type="submit"][formaction*="/delete"]:hover {
     background-color: #c82333;
+}
+.clear-button {
+    background-color: #6c757d;
+}
+.clear-button:hover {
+    background-color: #5a6268;
 }
 
 input[type="text"], input[type="email"], input[type="date"] {
@@ -139,9 +145,8 @@ label {
 .close:hover {
     color: #333;
 }
-/* Added for space above Save */
 .modal-content button {
-    margin-top: 20px; /* Adds space above Salvar */
+    margin-top: 20px;
 }
 
 .flash-message {
@@ -158,18 +163,66 @@ label {
     to { opacity: 1; }
 }
 
+/* Styling for filter and search section */
+.filter-search-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 20px 0;
+}
+
+.filter-search-container div {
+    display: flex;
+    flex-direction: column;
+}
+
+.filter-search-container select {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+    width: 200px;
+}
+
+.filter-search-container input[type="text"] {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+    width: 30vw; /* 30% of viewport width for both books and members */
+    max-width: 360px;
+}
+
+.filter-search-container form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.filter-search-container .button-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.filter-search-container button {
+    padding: 8px 16px;
+    width: 120px; /* Fixed width for buttons to align with search bar */
+}
+
 @media (max-width: 768px) {
-    .container {
-        padding: 10px;
+    .filter-search-container {
+        flex-direction: column;
+        align-items: flex-start;
     }
-    table, th, td {
-        font-size: 14px;
+    .filter-search-container input[type="text"] {
+        width: 100%;
+        max-width: none;
     }
-    button {
-        padding: 6px 12px;
-        font-size: 12px;
+    .filter-search-container select {
+        width: 100%;
     }
-    input[type="text"], input[type="email"], input[type="date"] {
-        font-size: 12px;
+    .filter-search-container button {
+        width: 100%;
     }
 }

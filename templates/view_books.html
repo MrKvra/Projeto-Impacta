@@ -5,13 +5,42 @@
 
     <button onclick="openAddBookModal()">Adicionar Novo Livro</button>
 
-    <div>
-        <label for="per_page">Itens por página:</label>
-        <select id="per_page" onchange="window.location.href='/view_books?page=1&per_page=' + this.value">
-            <option value="5" {% if per_page == 5 %}selected{% endif %}>5</option>
-            <option value="10" {% if per_page == 10 %}selected{% endif %}>10</option>
-            <option value="20" {% if per_page == 20 %}selected{% endif %}>20</option>
-        </select>
+    <!-- Filter and Search -->
+    <div class="filter-search-container">
+        <!-- Genre Filter -->
+        <div>
+            <label for="genero">Filtrar por Gênero:</label>
+            <select id="genero" onchange="window.location.href='/view_books?page=1&per_page={{ per_page }}&genero=' + this.value + '&search={{ search }}'">
+                {% for genre in genres %}
+                    <option value="{{ genre }}" {% if genre == selected_genero %}selected{% endif %}>
+                        {{ 'Todos' if genre == 'all' else genre }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+        <!-- Items per Page -->
+        <div>
+            <label for="per_page">Itens por página:</label>
+            <select id="per_page" onchange="window.location.href='/view_books?page=1&per_page=' + this.value + '&genero={{ selected_genero }}&search={{ search }}'">
+                <option value="5" {% if per_page == 5 %}selected{% endif %}>5</option>
+                <option value="10" {% if per_page == 10 %}selected{% endif %}>10</option>
+                <option value="20" {% if per_page == 20 %}selected{% endif %}>20</option>
+            </select>
+        </div>
+        <!-- Search Bar and Buttons -->
+        <div>
+            <form method="GET" action="{{ url_for('view_books') }}">
+                <label for="search">Pesquisar por Título:</label>
+                <div class="button-group">
+                    <input type="text" name="search" id="search" value="{{ search }}" placeholder="Digite o título do livro">
+                    <input type="hidden" name="page" value="1">
+                    <input type="hidden" name="per_page" value="{{ per_page }}">
+                    <input type="hidden" name="genero" value="{{ selected_genero }}">
+                    <button type="submit">Pesquisar</button>
+                    <a href="{{ url_for('view_books', page=1, per_page=per_page) }}"><button type="button" class="clear-button">Limpar</button></a>
+                </div>
+            </form>
+        </div>
     </div>
 
     <table>
@@ -44,7 +73,7 @@
             </td>
             <td class="actions">
                 <button onclick="openEditBookModal('{{ book.id }}', '{{ book.title }}', '{{ book.author }}', '{{ book.isbn }}', '{{ book.genero }}')">Editar</button>
-                <form method="POST" action="{{ url_for('view_books', page=pagination.page, per_page=per_page) }}" style="display:inline;" onsubmit="return confirm('Tem certeza que deseja excluir este livro? Isso também excluirá todo o histórico de aluguel associado ao livro.');">
+                <form method="POST" action="{{ url_for('view_books', page=pagination.page, per_page=per_page, genero=selected_genero, search=search) }}" style="display:inline;" onsubmit="return confirm('Tem certeza que deseja excluir este livro? Isso também excluirá todo o histórico de aluguel associado ao livro.');">
                     <input type="hidden" name="action" value="delete_book">
                     <input type="hidden" name="book_id" value="{{ book.id }}">
                     <button type="submit" {% if book.status == 'rented' %}disabled{% endif %}>Excluir</button>
@@ -56,11 +85,11 @@
 
     <div>
         {% if pagination.has_prev %}
-            <a href="{{ url_for('view_books', page=pagination.prev_num, per_page=per_page) }}">Anterior</a>
+            <a href="{{ url_for('view_books', page=pagination.prev_num, per_page=per_page, genero=selected_genero, search=search) }}">Anterior</a>
         {% endif %}
         <span>Página {{ pagination.page }} de {{ pagination.pages }}</span>
         {% if pagination.has_next %}
-            <a href="{{ url_for('view_books', page=pagination.next_num, per_page=per_page) }}">Próxima</a>
+            <a href="{{ url_for('view_books', page=pagination.next_num, per_page=per_page, genero=selected_genero, search=search) }}">Próxima</a>
         {% endif %}
     </div>
 
@@ -69,7 +98,7 @@
         <div class="modal-content">
             <span class="close" onclick="closeAddBookModal()">×</span>
             <h2>Adicionar Novo Livro</h2>
-            <form method="POST" action="{{ url_for('view_books', page=pagination.page, per_page=per_page) }}">
+            <form method="POST" action="{{ url_for('view_books', page=pagination.page, per_page=per_page, genero=selected_genero, search=search) }}">
                 <input type="hidden" name="action" value="add_book">
                 <div>
                     <label>Título:</label>
@@ -86,14 +115,11 @@
                 <div>
                     <label>Gênero:</label>
                     <select name="genero" required>
-                        <option value="Fantasia">Fantasia</option>
-                        <option value="Ficção Científica">Ficção Científica</option>
-                        <option value="Romance">Romance</option>
-                        <option value="Aventura">Aventura</option>
-                        <option value="Clássico">Clássico</option>
-                        <option value="Mistério">Mistério</option>
-                        <option value="Terror">Terror</option>
-                        <option value="Literatura Infantil">Literatura Infantil</option>
+                        {% for genre in genres %}
+                            {% if genre != 'all' %}
+                                <option value="{{ genre }}">{{ genre }}</option>
+                            {% endif %}
+                        {% endfor %}
                     </select>
                 </div>
                 <button type="submit">Adicionar</button>
@@ -106,7 +132,7 @@
         <div class="modal-content">
             <span class="close" onclick="closeEditBookModal()">×</span>
             <h2>Editar Livro</h2>
-            <form method="POST" action="{{ url_for('view_books', page=pagination.page, per_page=per_page) }}">
+            <form method="POST" action="{{ url_for('view_books', page=pagination.page, per_page=per_page, genero=selected_genero, search=search) }}">
                 <input type="hidden" name="action" value="edit_book">
                 <input type="hidden" name="book_id" id="editBookId">
                 <div>
@@ -124,14 +150,11 @@
                 <div>
                     <label>Gênero:</label>
                     <select name="genero" id="editBookGenero" required>
-                        <option value="Fantasia">Fantasia</option>
-                        <option value="Ficção Científica">Ficção Científica</option>
-                        <option value="Romance">Romance</option>
-                        <option value="Aventura">Aventura</option>
-                        <option value="Clássico">Clássico</option>
-                        <option value="Mistério">Mistério</option>
-                        <option value="Terror">Terror</option>
-                        <option value="Literatura Infantil">Literatura Infantil</option>
+                        {% for genre in genres %}
+                            {% if genre != 'all' %}
+                                <option value="{{ genre }}">{{ genre }}</option>
+                            {% endif %}
+                        {% endfor %}
                     </select>
                 </div>
                 <button type="submit">Salvar</button>

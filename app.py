@@ -7,7 +7,6 @@ from sqlalchemy.exc import IntegrityError
 
 load_dotenv()
 
-
 app = Flask(__name__)
 connection_string = "mssql+pyodbc://DESKTOP-TFIS1IE\\SQLEXPRESS/ProjetoImpacta?driver=ODBC+Driver+17+for+SQL+Server&trusted_connection=yes"
 
@@ -125,7 +124,7 @@ def view_books():
                         title=request.form['title'],
                         author=request.form['author'],
                         isbn=isbn,
-                        genero=request.form['genero']  # New field
+                        genero=request.form['genero']
                     )
                     db.session.add(book)
                     db.session.commit()
@@ -144,7 +143,7 @@ def view_books():
                     book.title = request.form['title']
                     book.author = request.form['author']
                     book.isbn = isbn
-                    book.genero = request.form['genero']  # New field
+                    book.genero = request.form['genero']
                     db.session.commit()
                     flash('Livro editado com sucesso!')
                 except IntegrityError:
@@ -159,14 +158,33 @@ def view_books():
                 db.session.delete(book)
                 db.session.commit()
                 flash('Livro excluído com sucesso! Todos os registros de aluguel associados foram removidos.')
-        return redirect(url_for('view_books', page=request.args.get('page', 1), per_page=request.args.get('per_page', 10)))
+        return redirect(url_for('view_books', page=request.args.get('page', 1), per_page=request.args.get('per_page', 10), genero=request.args.get('genero'), search=request.args.get('search')))
 
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 10, type=int)
     per_page = min(max(per_page, 5), 20)
-    books_paginated = Book.query.order_by(Book.id).paginate(page=page, per_page=per_page, error_out=False)
+    genero = request.args.get('genero')
+    search = request.args.get('search')
+
+    # Base query
+    query = Book.query
+
+    # Apply genre filter
+    if genero and genero != 'all':
+        query = query.filter_by(genero=genero)
+
+    # Apply search filter
+    if search:
+        query = query.filter(Book.title.ilike(f'%{search}%'))
+
+    books_paginated = query.order_by(Book.id).paginate(page=page, per_page=per_page, error_out=False)
+
+    # List of genres for the dropdown
+    genres = ['all', 'Fantasia', 'Ficção Científica', 'Romance', 'Aventura', 'Clássico', 'Mistério', 'Terror', 'Literatura Infantil']
+
     return render_template('view_books.html', books=books_paginated.items, current_date=datetime.utcnow(),
-                           pagination=books_paginated, per_page=per_page)
+                           pagination=books_paginated, per_page=per_page, genres=genres,
+                           selected_genero=genero or 'all', search=search or '')
 
 @app.route('/view_members', methods=['GET', 'POST'])
 def view_members():
@@ -206,15 +224,28 @@ def view_members():
         elif action == 'delete_member':
             member_id = request.form['member_id']
             member = Member.query.get_or_404(member_id)
-            db.session.delete(member)
-            db.session.commit()
-            flash('Membro excluído com sucesso! Todos os registros de aluguel associados foram removidos.')
-        return redirect(url_for('view_members', page=request.args.get('page', 1), per_page=request.args.get('per_page', 10)))
+            has_active_rentals = any(rental.actual_return_date is None for rental in member.rentals)
+            if has_active_rentals:
+                flash('Não é possível excluir um membro com aluguéis em andamento!')
+            else:
+                db.session.delete(member)
+                db.session.commit()
+                flash('Membro excluído com sucesso! Todos os registros de aluguel associados foram removidos.')
+        return redirect(url_for('view_members', page=request.args.get('page', 1), per_page=request.args.get('per_page', 10), search=request.args.get('search')))
 
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 10, type=int)
     per_page = min(max(per_page, 5), 20)
-    members_paginated = Member.query.order_by(Member.id).paginate(page=page, per_page=per_page, error_out=False)
+    search = request.args.get('search')
+
+    # Base query
+    query = Member.query
+
+    # Apply search filter
+    if search:
+        query = query.filter(Member.name.ilike(f'%{search}%'))
+
+    members_paginated = query.order_by(Member.id).paginate(page=page, per_page=per_page, error_out=False)
     members_data = [
         {
             'id': member.id,
@@ -224,7 +255,7 @@ def view_members():
         }
         for member in members_paginated.items
     ]
-    return render_template('view_members.html', members_data=members_data, pagination=members_paginated, per_page=per_page)
+    return render_template('view_members.html', members_data=members_data, pagination=members_paginated, per_page=per_page, search=search or '')
 
 @app.route('/rental_history')
 def rental_history():
